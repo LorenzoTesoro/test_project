@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: test_project_nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+      - db
+
+  php:
+    build: .
+    container_name: test_project_php
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: test_project_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test_project_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: test_project_phpmyadmin
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+
+volumes:
+  db_data:
