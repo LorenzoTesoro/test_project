@@ -21,7 +21,7 @@ class Order
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(type: 'date', nullable: true)]
+    #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTime $order_date = null;
 
     public function getId(): ?int
