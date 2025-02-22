@@ -15,14 +15,14 @@ class Order
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(type: "string", length: 255, nullable: true)]
     private ?string $name = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $order_date = null;
+    #[ORM\Column(type: 'date', nullable: true)]
+    private ?\DateTime $order_date = null;
 
     public function getId(): ?int
     {
