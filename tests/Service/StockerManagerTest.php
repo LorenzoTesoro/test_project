@@ -4,21 +4,21 @@ namespace App\Tests\Service;
 
 use App\Entity\Order;
 use App\Entity\Product;
-use App\Service\StockManager;
+use App\Service\StockManagerService;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Doctrine\ORM\EntityManagerInterface;
 
 class StockManagerTest extends KernelTestCase
 {
     private EntityManagerInterface $entityManager;
-    private StockManager $stockManager;
+    private StockManagerService $stockManager;
 
     protected function setUp(): void
     {
         self::bootKernel();
 
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $this->stockManager = static::getContainer()->get(StockManager::class);
+        $this->stockManager = static::getContainer()->get(StockManagerService::class);
 
         // Clear database
         $this->entityManager->createQuery('DELETE FROM App\Entity\Order')->execute();

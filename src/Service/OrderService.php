@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Service;
+
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use App\Entity\Order;
@@ -11,7 +13,7 @@ class OrderService
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
-        private readonly StockManager $stockManagerService
+        private readonly StockManagerService $stockManagerService
     ) {}
 
 
@@ -35,7 +37,7 @@ class OrderService
             $isValid = $this->checkValidDate($data['order_date']);
 
             if ($isValid) {
-                $order->setOrderDate(new DateTime($data['order_date']));
+                $order->setOrderDate(new \DateTime($data['order_date']));
             } else {
                 return new JsonResponse(['error' => 'Invalid Date format'], Response::HTTP_BAD_REQUEST);
             }
@@ -46,7 +48,12 @@ class OrderService
         $this->em->persist($order);
         $this->em->flush();
 
-        return $order;
+        return new JsonResponse([
+            'id' => $order->getId(),
+            'name' => $order->getName() ? $order->getName() : '',
+            'description' => $order->getDescription() ? $order->getDescription() : '',
+            'order_date' => $order->getOrderDate() ?  $order->getOrderDate()->format('Y-m-d') : ''
+        ], Response::HTTP_CREATED);
     }
 
     public function viewOrder(Request $request)
@@ -109,7 +116,7 @@ class OrderService
             $isValid = $this->checkValidDate($data['order_date']);
 
             if ($isValid) {
-                $order->setOrderDate(new DateTime($data['order_date']));
+                $order->setOrderDate(new \DateTime($data['order_date']));
             } else {
                 return new JsonResponse(['error' => 'Invalid Date format'], Response::HTTP_BAD_REQUEST);
             }
@@ -118,7 +125,12 @@ class OrderService
         $this->em->persist($order);
         $this->em->flush();
 
-        return $order;
+        return new JsonResponse([
+            'id' => $order->getId(),
+            'name' => $order->getName(),
+            'description' => $order->getDescription(),
+            'order_date' => $order->getOrderDate()->format('Y-m-d')
+        ], Response::HTTP_OK);
     }
 
     public function deleteOrder($id)

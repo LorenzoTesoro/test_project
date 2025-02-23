@@ -14,8 +14,6 @@ class OrderControllerTest extends WebTestCase
     private $client;
     private $entityManager;
 
-    public function __construct(private readonly OrderService $orderService) {}
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,6 +24,7 @@ class OrderControllerTest extends WebTestCase
         $this->entityManager->createQuery('DELETE FROM App\Entity\Product')->execute();
     }
 
+    /* UTILS */
     private function createOrder(array $data = []): array
     {
         $defaultData = [
@@ -47,6 +46,7 @@ class OrderControllerTest extends WebTestCase
 
         return json_decode($this->client->getResponse()->getContent(), true);
     }
+
     private function createOrderWithProducts(string $name, string $description, string $date, array $productPrices): Order
     {
         $order = new Order();
@@ -76,6 +76,9 @@ class OrderControllerTest extends WebTestCase
         return $product;
     }
 
+
+    /* TESTS */
+
     public function testCreateOrderSuccess(): void
     {
         $data = [
@@ -91,6 +94,7 @@ class OrderControllerTest extends WebTestCase
         $this->assertEquals($data['description'], $response['description']);
         $this->assertEquals($data['order_date'], $response['order_date']);
     }
+
 
     public function testCreateOrderWithMinimalData(): void
     {
@@ -230,6 +234,7 @@ class OrderControllerTest extends WebTestCase
         $response = $this->client->getResponse();
         $this->assertEquals(Response::HTTP_NOT_FOUND, $response->getStatusCode());
     }
+
 
     public function testCreateOrderWithInvalidJson(): void
     {

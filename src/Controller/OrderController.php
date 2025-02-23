@@ -10,32 +10,22 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Product;
-use OrderService;
+use App\Service\OrderService;
 
 #[Route('/api/orders', name: 'api_orders_')]
 class OrderController extends AbstractController
 {
-    private OrderService $orderService;
-
-    public function __construct(OrderService $orderService)
-    {
-        $this->orderService = $orderService;
-    }
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly OrderService $orderService,
+    ) {}
 
 
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
         try {
-
-            $order = $this->orderService->createOrder($request);
-
-            return new JsonResponse([
-                'id' => $order->getId(),
-                'name' => $order->getName() ? $order->getName() : '',
-                'description' => $order->getDescription() ? $order->getDescription() : '',
-                'order_date' => $order->getOrderDate() ?  $order->getOrderDate()->format('Y-m-d') : ''
-            ], Response::HTTP_CREATED);
+            return $this->orderService->createOrder($request);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Failed to create order'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -45,14 +35,7 @@ class OrderController extends AbstractController
     public function edit(Request $request, int $id): JsonResponse
     {
         try {
-            $order = $this->orderService->updateOrder($request, $id);
-
-            return new JsonResponse([
-                'id' => $order->getId(),
-                'name' => $order->getName(),
-                'description' => $order->getDescription(),
-                'order_date' => $order->getOrderDate()->format('Y-m-d')
-            ], Response::HTTP_OK);
+            return $this->orderService->updateOrder($request, $id);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Failed to update order'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

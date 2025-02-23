@@ -7,17 +7,17 @@ use App\Entity\Product;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Lock\LockFactory;
 
-class StockManager
+class StockManagerService
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly LockFactory $lockFactory
+        private readonly LockFactory $lockfactory,
     ) {}
 
     public function processOrderCreation(Order $order): void
     {
         foreach ($order->getProducts() as $product) {
-            $lock = $this->lockFactory->createLock('product_' . $product->getId());
+            $lock = $this->lockfactory->createLock('product_' . $product->getId());
 
             if (!$lock->acquire()) {
                 throw new \RuntimeException('Could not acquire lock for product');
@@ -43,7 +43,7 @@ class StockManager
     public function processOrderCancellation(Order $order): void
     {
         foreach ($order->getProducts() as $product) {
-            $lock = $this->lockFactory->createLock('product_' . $product->getId());
+            $lock = $this->lockfactory->createLock('product_' . $product->getId());
 
             if (!$lock->acquire()) {
                 throw new \RuntimeException('Could not acquire lock for product');
