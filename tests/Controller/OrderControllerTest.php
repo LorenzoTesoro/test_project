@@ -7,11 +7,14 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Product;
+use OrderService;
 
 class OrderControllerTest extends WebTestCase
 {
     private $client;
     private $entityManager;
+
+    public function __construct(private readonly OrderService $orderService) {}
 
     protected function setUp(): void
     {
@@ -72,7 +75,6 @@ class OrderControllerTest extends WebTestCase
 
         return $product;
     }
-
 
     public function testCreateOrderSuccess(): void
     {

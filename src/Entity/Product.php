@@ -15,6 +15,9 @@ class Product
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\Column(type: 'integer')]
+    private int $stockLevel = 0;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $name = null;
 
@@ -55,6 +58,32 @@ class Product
     {
         $this->price = $price;
 
+        return $this;
+    }
+
+    public function decreaseStock(int $quantity): self
+    {
+        if ($quantity > $this->stockLevel) {
+            throw new \InvalidArgumentException('Insufficient stock available');
+        }
+        $this->stockLevel -= $quantity;
+        return $this;
+    }
+
+    public function increaseStock(int $quantity): self
+    {
+        $this->stockLevel += $quantity;
+        return $this;
+    }
+
+    public function getStockLevel(): int
+    {
+        return $this->stockLevel;
+    }
+
+    public function setStockLevel(int $stockLevel): self
+    {
+        $this->stockLevel = $stockLevel;
         return $this;
     }
 
