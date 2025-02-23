@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Entity\Product;
 
 #[Route('/api/orders', name: 'api_orders_')]
 class OrderController extends AbstractController
@@ -17,6 +18,61 @@ class OrderController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
     ) {}
+
+    #[Route('/orders', name: 'order_list', methods: ['GET'])]
+    public function listOrders(Request $request): Response
+    {
+        // Get filters from query parameters
+        $name = $request->query->get('name');
+        $description = $request->query->get('description');
+        $startDate = $request->query->get('start_date');
+        $endDate = $request->query->get('end_date');
+
+        // Create the query builder for filtering orders
+        $qb = $this->em->getRepository(Order::class)->createQueryBuilder('o');
+
+        if ($name != '' && !is_null($name)) {
+            $qb->andWhere('o.name LIKE :name')
+                ->setParameter('name', '%' . $name . '%');
+        }
+
+        if ($description != '' && !is_null($description)) {
+            $qb->andWhere('o.description LIKE :description')
+                ->setParameter('description', '%' . $description . '%');
+        }
+
+        if ($startDate) {
+            $qb->andWhere('o.order_date >= :startDate')
+                ->setParameter('startDate', new \DateTime($startDate));
+        }
+
+        if ($endDate) {
+            $qb->andWhere('o.order_date <= :endDate')
+                ->setParameter('endDate', new \DateTime($endDate));
+        }
+
+        // Execute query
+        $orders = $qb->getQuery()->getResult();
+
+        $ordersArray = array_map(function (Order $order) {
+            return [
+                'id' => $order->getId(),
+                'name' => $order->getName(),
+                'description' => $order->getDescription(),
+                'order_date' => $order->getOrderDate()->format('Y-m-d'),
+                'products' => array_map(function (Product $product) {
+                    return [
+                        'id' => $product->getId(),
+                        'price' => $product->getPrice()
+                    ];
+                }, $order->getProducts()->toArray())
+            ];
+        }, $orders);
+
+        return new JsonResponse([
+            'data' => $ordersArray
+        ], Response::HTTP_OK);
+    }
 
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
@@ -125,7 +181,6 @@ class OrderController extends AbstractController
             return new JsonResponse(['error' => 'Failed to remove order'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
 
 
     /* UTILS */
