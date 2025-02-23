@@ -18,7 +18,6 @@ class OrderControllerTest extends WebTestCase
         $this->client = static::createClient();
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
-        // Clear the database before each test
         $this->entityManager->createQuery('DELETE FROM App\Entity\Order')->execute();
     }
 
@@ -125,7 +124,6 @@ class OrderControllerTest extends WebTestCase
 
     public function testEditOrderSuccess(): void
     {
-        // Create initial order
         $response = $this->createOrder();
         $orderId = $response['id'];
 
@@ -155,11 +153,9 @@ class OrderControllerTest extends WebTestCase
 
     public function testPartialOrderUpdate(): void
     {
-        // Create initial order
         $initialResponse = $this->createOrder();
         $orderId = $initialResponse['id'];
 
-        // Update only the name
         $updateData = [
             'name' => 'Partially Updated Order',
         ];
@@ -270,5 +266,33 @@ class OrderControllerTest extends WebTestCase
             $this->assertArrayHasKey('id', $response);
             $this->assertEquals($orderData['name'], $response['name']);
         }
+    }
+
+    public function testDeleteOrderSuccess(): void
+    {
+        $response = $this->createOrder();
+        $orderId = $response['id'];
+
+        $this->client->request(
+            'DELETE',
+            "/api/orders/{$orderId}",
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
+
+        $responseData  = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('message', $responseData);
+        $this->assertEquals('Order deleted successfully',  $responseData['message']);
+
+        // Optional: You can also assert that the order no longer exists by trying to retrieve it
+        /*  $this->client->request('GET', "/api/orders/{$orderId}");
+        $getResponse = $this->client->getResponse(); */
+
+        // Assert that fetching the deleted order results in a 404 (not found)
+        //$this->assertEquals(Response::HTTP_NOT_FOUND, $getResponse->getStatusCode());
     }
 }

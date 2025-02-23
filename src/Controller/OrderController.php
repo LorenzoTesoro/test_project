@@ -28,18 +28,32 @@ class OrderController extends AbstractController
 
         try {
             $order = new Order();
-            $order->setName($data['name']);
+
+            if (isset($data['name']) && $data['name'] == '') {
+                return new JsonResponse(['error' => 'Name not provided'], Response::HTTP_BAD_REQUEST);
+            } else {
+                $order->setName($data['name']);
+            }
             $order->setDescription($data['description'] ?? null);
-            $order->setOrderDate(isset($data['order_date']) ? new DateTime($data['order_date']) : new DateTime());
+
+            if (isset($data['order_date']) && $data['order_date'] != '') {
+                $isValid = $this->checkValidDate($data['order_date']);
+
+                if ($isValid) {
+                    $order->setOrderDate(new DateTime($data['order_date']));
+                } else {
+                    return new JsonResponse(['error' => 'Invalid Date format'], Response::HTTP_BAD_REQUEST);
+                }
+            }
 
             $this->em->persist($order);
             $this->em->flush();
 
             return new JsonResponse([
                 'id' => $order->getId(),
-                'name' => $order->getName(),
-                'description' => $order->getDescription(),
-                'order_date' => $order->getOrderDate()->format('Y-m-d')
+                'name' => $order->getName() ? $order->getName() : '',
+                'description' => $order->getDescription() ? $order->getDescription() : '',
+                'order_date' => $order->getOrderDate() ?  $order->getOrderDate()->format('Y-m-d') : ''
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Failed to create order'], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -66,10 +80,18 @@ class OrderController extends AbstractController
             if (isset($data['description'])) {
                 $order->setDescription($data['description']);
             }
-            if (isset($data['order_date'])) {
-                $order->setOrderDate(new DateTime($data['order_date']));
+
+            if (isset($data['order_date']) && $data['order_date']) {
+                $isValid = $this->checkValidDate($data['order_date']);
+
+                if ($isValid) {
+                    $order->setOrderDate(new DateTime($data['order_date']));
+                } else {
+                    return new JsonResponse(['error' => 'Invalid Date format'], Response::HTTP_BAD_REQUEST);
+                }
             }
 
+            $this->em->persist($order);
             $this->em->flush();
 
             return new JsonResponse([
@@ -80,6 +102,39 @@ class OrderController extends AbstractController
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Failed to update order'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
+    public function delete(Request $request, int $id): JsonResponse
+    {
+        $order = $this->em->getRepository(Order::class)->find($id);
+        if (!$order) {
+            return new JsonResponse(['error' => 'Order not found'], Response::HTTP_NOT_FOUND);
+        }
+        /* dump($order->getId());
+        die(); */
+        try {
+            $this->em->remove($order);
+            $this->em->flush();
+
+            return new JsonResponse([
+                'message' => 'Order deleted successfully'
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Failed to remove order'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+
+    /* UTILS */
+    private function checkValidDate($date)
+    {
+        if (strtotime($date)) {
+            return true;
+        } else {
+            return false;
         }
     }
 }
